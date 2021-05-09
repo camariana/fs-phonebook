@@ -39,10 +39,28 @@ app.get('/', (request, response) => {
 })
 
 
+// Info
+app.get('/info', (request, response) => {
+    const noOfPersons = persons.length;
+    const time = new Date();
+
+    response.send(`
+        <p>
+            Phonebook has info for ${noOfPersons} people
+        </p>
+        <p>
+            ${time}
+        </p>
+    `)
+})
+
+
 // All person
 app.get('/api/persons', (request, response) => {
     response.json(persons);
 })
+
+
 
 
 
