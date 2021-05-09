@@ -1,11 +1,9 @@
-const e = require('express')
-const { response } = require('express')
 const express = require('express')
 const app = express()
 
 app.use(express.json())
 
-const persons = [
+let persons = [
     {
         "id": 1,
         "name": "Ebrima Faal",
@@ -32,6 +30,12 @@ const persons = [
         "number": "220-5554321"
     }
 ]
+
+
+// helper function/s
+const generateId = () => {
+    return `${Math.random().toString(36).substr(2, 9)}`;
+}
 
 // Home
 app.get('/', (request, response) => {
@@ -80,6 +84,41 @@ app.delete('/api/persons/:id', (request, response) => {
     const person = persons.filter(person => person.id !== id)
   
     response.status(204).end()
+})
+
+// receiving data
+app.post('/api/persons', (request, response) => {
+    const body = request.body
+    const isPerson = persons.some(person => person.name === body.name)
+   
+    if (isPerson) {
+        return response.status(400).json({ 
+            error: `${body.name} already exists in the phonebook` 
+        })
+    }
+
+    if (!body.name ) {
+        return response.status(400).json({ 
+            error: 'name missing' 
+        })
+    }
+
+    if (!body.number) {
+        return response.status(400).json({ 
+            error: 'number missing' 
+        })
+    }
+
+
+    const person = {
+        id: generateId(),
+        name: body.name,
+        number: body.number,
+    }
+
+    persons = persons.concat(person);
+
+    response.json(person)
 })
 
 
