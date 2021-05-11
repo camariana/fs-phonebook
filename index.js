@@ -109,22 +109,22 @@ app.delete('/api/persons/:id', (request, response) => {
 
 // receiving data
 app.post('/api/persons', (request, response) => {
-    const body = request.body
-    const isPerson = persons.some(person => person.name === body.name)
+    const {name, number} = request.body
+    const isPerson = persons.some(person => person.name === name)
    
     if (isPerson) {
         return response.status(400).json({ 
-            error: `${body.name} already exists in the phonebook` 
+            error: `${name} already exists in the phonebook` 
         })
     }
 
-    if (!body.name ) {
+    if (!name ) {
         return response.status(400).json({ 
             error: 'name missing' 
         })
     }
 
-    if (!body.number) {
+    if (!number) {
         return response.status(400).json({ 
             error: 'number missing' 
         })
@@ -133,8 +133,8 @@ app.post('/api/persons', (request, response) => {
 
     const person = {
         id: generateId(),
-        name: body.name,
-        number: body.number,
+        name,
+        number,
     }
 
     persons = persons.concat(person);
@@ -146,7 +146,7 @@ app.post('/api/persons', (request, response) => {
 app.use(unknownEndpoint);
 
 
-const PORT = 3001
+const PORT = 3002
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 })
