@@ -8,10 +8,19 @@ const unknownEndpoint = (request, response) => {
     response.status(404).send({ error:  'unknow endpoint'})
 }
 
+morgan.token('contact', function (request, response)  {
+    const {name, number} = request.body
+
+    return JSON.stringify({
+        name,
+        number,
+    })
+})
+
 
 // Middlewares
 app.use(express.json())
-app.use(morgan('tiny'))
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :contact'))
 
 
 
