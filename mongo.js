@@ -39,7 +39,3 @@ Person.find({}).then(result => {
   })
   mongoose.connection.close()
 })
-
-// Note.find({ important: true }).then(result => {
-//   console.log(result);
-// })
