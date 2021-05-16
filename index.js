@@ -10,14 +10,9 @@ const Person = require('./models/person')
 
 // Middlewares
 app.use(express.json())
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :contact'))
 app.use(cors())
 app.use(express.static('build'))
 
-
-const unknownEndpoint = (request, response) => {
-    response.status(404).send({ error:  'unknow endpoint'})
-}
 
 morgan.token('contact', function (request, response)  {
     const {name, number} = request.body
@@ -27,36 +22,8 @@ morgan.token('contact', function (request, response)  {
         number,
     })
 })
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :contact'))
 
-
-
-// let persons = [
-//     {
-//         "id": 1,
-//         "name": "Ebrima Faal",
-//         "number": "220-9998765"
-//     },
-//     {
-//         "id": 2,
-//         "name": "Cherno Faal",
-//         "number": "220-8887654"
-//     },
-//     {
-//         "id": 3,
-//         "name": "Binta Dibba",
-//         "number": "220-7776543"
-//     },
-//     {
-//         "id": 4,
-//         "name": "Lamin Barrow",
-//         "number": "220-6665432"
-//     },
-//     {
-//         "id": 5,
-//         "name": "Ebrima Touray",
-//         "number": "220-5554321"
-//     }
-// ]
 
 
 // helper function/s
@@ -71,18 +38,20 @@ app.get('/', (request, response) => {
 
 
 // Info
-app.get('/info', (request, response) => {
-    // const noOfPersons = persons.length
-    // const time = new Date()
+app.get('/info', (request, response, next) => {
+    const time = new Date()
 
-    // response.send(`
-    //     <p>
-    //         Phonebook has info for ${noOfPersons} people
-    //     </p>
-    //     <p>
-    //         ${time}
-    //     </p>
-    // `)
+    Person.countDocuments({})
+        .then(persons => {
+            response.send(`
+            <p>
+                Phonebook has info for ${persons} people
+            </p>
+            <p>
+             ${time}
+            </p>
+            `)
+        })
 })
 
 
@@ -96,22 +65,29 @@ app.get('/api/persons', (request, response) => {
 
 
 // Single person
-app.get('/api/persons/:id', (request, response) => {
-    Person.findById(request.params.id).then(person => {
-        response.json(person);
-    })
+app.get('/api/persons/:id', (request, response, next) => {
+    Person.findById(request.params.id)
+        .then(person => {
+            if(person) {
+                response.json(person);
+            } else {
+                response.status(404).end()
+            }
+        })
+        .catch(error => next(error))
 })
 
 // delete person
-app.delete('/api/persons/:id', (request, response) => {
-    // const id = Number(request.params.id)
-    // const person = persons.filter(person => person.id !== id)
-  
-    // response.status(204).end()
+app.delete('/api/persons/:id', (request, response, next) => {
+    Person.findByIdAndRemove(request.params.id)
+        .then(result => {
+            response.status(204).end()
+        })
+        .catch(error => next(error))
 })
 
 // receiving data
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const {name, number} = request.body
    // const isPerson = persons.some(person => person.name === name)
    
@@ -139,14 +115,32 @@ app.post('/api/persons', (request, response) => {
         number,
     })
 
-    person.save().then(savedPerson => {
-        response.json(savedPerson)
-        mongoose.connection.close()
-   })
+    person.save()
+        .then(savedPerson => {
+            response.json(savedPerson)
+        })
+        .catch(error => next(error))
 })
 
- 
+
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error:  'unknow endpoint'})
+}
 app.use(unknownEndpoint)
+
+
+// handler of requests with result to errors
+const errorHandler = (error, request, response, next) => {
+    console.log(error.message);
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' })
+    }
+
+    // In all other error situations, the middleware passes the error forward to the default Express error handler. 
+    next(error)
+}
+app.use(errorHandler)
 
 
 const PORT = process.env.PORT
