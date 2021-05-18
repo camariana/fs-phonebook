@@ -41,7 +41,8 @@ app.get('/', (request, response) => {
 app.get('/info', (request, response, next) => {
     const time = new Date()
 
-    Person.countDocuments({})
+    Person
+        .countDocuments({})
         .then(persons => {
             response.send(`
             <p>
@@ -57,7 +58,8 @@ app.get('/info', (request, response, next) => {
 
 // All person
 app.get('/api/persons', (request, response) => {
-    Person.find({}).then(persons => {
+    Person
+        .find({}).then(persons => {
         response.json(persons)
     })
 })
@@ -66,7 +68,8 @@ app.get('/api/persons', (request, response) => {
 
 // Single person
 app.get('/api/persons/:id', (request, response, next) => {
-    Person.findById(request.params.id)
+    Person
+        .findById(request.params.id)
         .then(person => {
             if(person) {
                 response.json(person);
@@ -79,12 +82,32 @@ app.get('/api/persons/:id', (request, response, next) => {
 
 // delete person
 app.delete('/api/persons/:id', (request, response, next) => {
-    Person.findByIdAndRemove(request.params.id)
+    Person
+        .findByIdAndRemove(request.params.id)
         .then(result => {
             response.status(204).end()
         })
         .catch(error => next(error))
 })
+
+
+// modified a person
+app.put('/api/persons/:id', (request, response, next) => {
+    const {name, number} = request.body
+
+    const person = {
+        name,
+        number,
+    }
+
+    Person
+        .findByIdAndUpdate(request.params.id, person, { new: true })
+        .then(updatedPerson => {
+            response.json(updatedPerson)
+        })
+        .catch(error => next(error))
+})
+
 
 // receiving data
 app.post('/api/persons', (request, response, next) => {
@@ -97,17 +120,17 @@ app.post('/api/persons', (request, response, next) => {
         })
     } */
 
-    if (name === undefined ) {
-        return response.status(400).json({ 
-            error: 'name missing' 
-        })
-    }
+    // if (name === undefined ) {
+    //     return response.status(400).json({ 
+    //         error: 'name missing' 
+    //     })
+    // }
 
-    if (number === undefined) {
-        return response.status(400).json({ 
-            error: 'number missing' 
-        })
-    }
+    // if (number === undefined) {
+    //     return response.status(400).json({ 
+    //         error: 'number missing' 
+    //     })
+    // }
 
 
     const person = new  Person({
@@ -115,7 +138,8 @@ app.post('/api/persons', (request, response, next) => {
         number,
     })
 
-    person.save()
+    person
+        .save()
         .then(savedPerson => {
             response.json(savedPerson)
         })
@@ -135,6 +159,8 @@ const errorHandler = (error, request, response, next) => {
 
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
+    } else if(error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
     }
 
     // In all other error situations, the middleware passes the error forward to the default Express error handler. 
