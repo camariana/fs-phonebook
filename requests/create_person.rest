@@ -1,0 +1,10 @@
+GET http://localhost:3001/api/persons/
+
+### You can also add multiple requests in the same file using ### separators:
+POST http://localhost:3001/api/persons/ HTTP/1.1
+content-type: application/json
+
+{
+    "name": "Lamin",
+    "number": "220-706544311"
+}
